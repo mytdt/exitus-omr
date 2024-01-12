@@ -7,7 +7,8 @@
     "configure": "build-opencv configure",
     "dev": "npx nodemon",
     "lint": "eslint '*/**/*.{js,ts,tsx}' --quiet --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "commit": "git-cz"
   },
   "dependencies": {
     "@u4/opencv4nodejs": "^6.5.2",
@@ -16,15 +17,30 @@
     "quagga": "^0.12.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^18.4.4",
+    "@commitlint/config-conventional": "^18.4.4",
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^6.18.1",
     "@typescript-eslint/parser": "^6.18.1",
+    "commitizen": "^4.3.0",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-node": "^11.1.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
     "nodemon": "^3.0.2",
     "prettier": "^3.2.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js}": "yarn lint",
+    "*.css": "yarn format"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
