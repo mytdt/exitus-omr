@@ -11,10 +11,14 @@
     "do-install": "build-opencv build",
     "rebuild": "build-opencv --version 4.6.0 rebuild",
     "configure": "build-opencv configure",
-    "dev": "npx nodemon" 
+    "dev": "npx nodemon"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "@typescript-eslint/parser": "^6.18.1",
+    "eslint": "^8.56.0",
+    "eslint-plugin-node": "^11.1.0",
     "nodemon": "^3.0.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"

@@ -1,0 +1,4 @@
+//eslintignore file
+build
+node_modules
+coverage
