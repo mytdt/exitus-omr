@@ -1,25 +1,29 @@
 {
-  "dependencies": {
-    "@u4/opencv4nodejs": "^6.5.2",
-    "jsqr": "^1.4.0",
-    "node-gyp": "^10.0.1",
-    "quagga": "^0.12.1"
-  },
   "scripts": {
     "install_arm64": "build-opencv --version 4.5.4 --flag=\"-DCMAKE_SYSTEM_PROCESSOR=arm64 -DCMAKE_OSX_ARCHITECTURES=arm64\" build",
     "install_4.5.5_cuda": "build-opencv --version 4.5.5 --flags=\"-DWITH_CUDA=ON -DWITH_CUDNN=ON -DOPENCV_DNN_CUDA=ON -DCUDA_FAST_MATH=ON\" build",
     "do-install": "build-opencv build",
     "rebuild": "build-opencv --version 4.6.0 rebuild",
     "configure": "build-opencv configure",
-    "dev": "npx nodemon"
+    "dev": "npx nodemon",
+    "lint": "eslint '*/**/*.{js,ts,tsx}' --quiet --fix",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@u4/opencv4nodejs": "^6.5.2",
+    "jsqr": "^1.4.0",
+    "node-gyp": "^10.0.1",
+    "quagga": "^0.12.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^6.18.1",
     "@typescript-eslint/parser": "^6.18.1",
     "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-node": "^11.1.0",
     "nodemon": "^3.0.2",
+    "prettier": "^3.2.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
