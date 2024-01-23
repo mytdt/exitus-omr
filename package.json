@@ -11,10 +11,10 @@
     "commit": "git-cz"
   },
   "dependencies": {
+    "@ericblade/quagga2": "^1.8.4",
     "@u4/opencv4nodejs": "^6.5.2",
     "jsqr": "^1.4.0",
-    "node-gyp": "^10.0.1",
-    "quagga": "^0.12.1"
+    "node-gyp": "^10.0.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^18.4.4",
