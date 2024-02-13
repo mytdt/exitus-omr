@@ -38,6 +38,22 @@ class OpenCVImageDataAdapter implements ImageDataAdapter {
         return this.openCV.imencode(fileExtension, originalData, flags || [])
     }
 
+    convertOriginalDataToContour(originalData: OpenCV.Contour): Contour {
+        const { numPoints: numberOfPoints, area, isConvex, hierarchy } = originalData
+        return {
+            numberOfPoints,
+            area,
+            isConvex,
+            hierarchy,
+            points: originalData.getPoints()
+        }
+    }
+
+    convertContourToOriginalData(contour: Contour) {
+        const { points } = contour;
+        return new this.openCV.Contour(points as OpenCV.Point2[]);
+    }
+
 }
 
 module.exports = OpenCVImageDataAdapter;
