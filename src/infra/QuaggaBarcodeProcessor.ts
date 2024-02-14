@@ -1,6 +1,6 @@
 import { QuaggaJSStatic } from '@ericblade/quagga2';
 
-class QuaggaBarcodeProcessor implements BarcodeProcessor {
+export default class QuaggaBarcodeProcessor implements BarcodeProcessor {
     protected readonly quagga: QuaggaJSStatic;
 
     constructor(quagga: QuaggaJSStatic) {
@@ -34,5 +34,3 @@ class QuaggaBarcodeProcessor implements BarcodeProcessor {
         }
     }
 }
-
-module.exports = QuaggaBarcodeProcessor;

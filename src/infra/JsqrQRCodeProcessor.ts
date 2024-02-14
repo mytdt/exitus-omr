@@ -1,7 +1,7 @@
 import jsQR, { QRCode } from "jsqr";
 import jpeg from 'jpeg-js';
 
-class JsqrQRCodeProcessor implements QRCodeProcessor {
+export default class JsqrQRCodeProcessor implements QRCodeProcessor {
     protected readonly jsqr: typeof jsQR;
     protected readonly imageDataAdapter: ImageDataAdapter;
 
@@ -19,4 +19,3 @@ class JsqrQRCodeProcessor implements QRCodeProcessor {
     }
 }
 
-module.exports = JsqrQRCodeProcessor;
