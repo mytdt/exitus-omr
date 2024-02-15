@@ -19,24 +19,70 @@ export default class OpenCVImageProcessor implements ImageProcessor {
         }
     };
 
+
+    createMaskFromImage(currentImage: ImageMatrix, fillValue?: number | number[]): ImageMatrix {
+        const openCVImage = this.imageDataAdapter.convertImageMatrixToOriginalData(currentImage);
+
+        const { rows, cols, type } = openCVImage;
+
+        const openCVMask = new this.openCV.Mat(rows, cols, type, 0);
+
+        return this.imageDataAdapter.convertOriginalDataToImageMatrix(openCVMask);
+    }
+
     convertToGrayscale(currentImage: ImageMatrix): ImageMatrix {
         const openCVConvertedCurrentImage = this.imageDataAdapter.convertImageMatrixToOriginalData(currentImage) as OpenCV.Mat;
         const openCVGrayscaledImage = openCVConvertedCurrentImage.bgrToGray();
         return this.imageDataAdapter.convertOriginalDataToImageMatrix(openCVGrayscaledImage);
     }
 
-    applyThreshold(currentImage: ImageMatrix, { thresholdNumber, maximumValue, type }: BinaryThresholdParameters): ImageMatrix {
+    drawContoursInImage(currentImage: ImageMatrix, contours: Contour[]): ImageMatrix {
+        const openCVImage = this.imageDataAdapter.convertImageMatrixToOriginalData(currentImage) as OpenCV.Mat;
+        const openCVContoursPoints = contours.map((currentContour: Contour) => (this.imageDataAdapter.convertContourToOriginalData(currentContour) as OpenCV.Contour).getPoints())
+        openCVImage.drawContours(openCVContoursPoints, -1, new OpenCV.Vec3(255, 255, 255), { thickness: -1 })
+        return this.imageDataAdapter.convertOriginalDataToImageMatrix(openCVImage);
+    }
+
+    applyBitwiseNot(currentImage: ImageMatrix): ImageMatrix {
+        const openCVConvertedCurrentImage = this.imageDataAdapter.convertImageMatrixToOriginalData(currentImage) as OpenCV.Mat;
+        const openCVBitwisedImage = openCVConvertedCurrentImage.bitwiseNot();
+        return this.imageDataAdapter.convertOriginalDataToImageMatrix(openCVBitwisedImage);
+    }
+
+    applyBitwiseAnd(currentImage: ImageMatrix, mask: ImageMatrix): ImageMatrix {
+        const openCVConvertedCurrentImage = this.imageDataAdapter.convertImageMatrixToOriginalData(currentImage) as OpenCV.Mat;
+        const openCVMask = this.imageDataAdapter.convertImageMatrixToOriginalData(mask);
+        const openCVBitwisedImage = openCVConvertedCurrentImage.bitwiseAnd(openCVMask);
+        return this.imageDataAdapter.convertOriginalDataToImageMatrix(openCVBitwisedImage);
+    }
+
+    /* TODO: Create Proper internal types */
+    applyGaussianBlur(currentImage: ImageMatrix, options?: {}): ImageMatrix {
+        const openCVConvertedCurrentImage = this.imageDataAdapter.convertImageMatrixToOriginalData(currentImage) as OpenCV.Mat;
+        const openCVBlurredImage = openCVConvertedCurrentImage.gaussianBlur(new OpenCV.Size(3, 3), 0)
+        return this.imageDataAdapter.convertOriginalDataToImageMatrix(openCVBlurredImage);
+    }
+
+
+    applyThreshold(currentImage: ImageMatrix, { thresholdNumber, maximumValue, type }: ThresholdParameters): ImageMatrix {
         const openCVConvertedCurrentImage = this.imageDataAdapter.convertImageMatrixToOriginalData(currentImage) as OpenCV.Mat;
         const thresholdedImage = openCVConvertedCurrentImage.threshold(thresholdNumber, maximumValue, type)
 
         return this.imageDataAdapter.convertOriginalDataToImageMatrix(thresholdedImage)
     }
 
-    getImageContours(currentImage: ImageMatrix, options?: any): Contour[] {
+    getImageContours(currentImage: ImageMatrix, params: ImageContourAlgorithmParameters): Contour[] {
         const openCVConvertedCurrentImage = this.imageDataAdapter.convertImageMatrixToOriginalData(currentImage) as OpenCV.Mat;
-        const openCVContour = openCVConvertedCurrentImage.findContours(this.openCV.RETR_TREE, this.openCV.CHAIN_APPROX_SIMPLE);
+
+        const openCVContour = openCVConvertedCurrentImage.findContours(params.mode, params.method);
+
         const contours = openCVContour.map((currentOpenCVContour: OpenCV.Contour) => this.imageDataAdapter.convertOriginalDataToContour(currentOpenCVContour));
         return contours;
+    }
+
+    getBoundingRectangleOfContour(contour: Contour): Rectangle {
+        const openCVContour = this.imageDataAdapter.convertContourToOriginalData(contour) as OpenCV.Contour;
+        return openCVContour.boundingRect();
     }
 
     getRegionOfInterest(currentImage: ImageMatrix, { x, y, width, height }: Rectangle): ImageMatrix {
@@ -45,7 +91,7 @@ export default class OpenCVImageProcessor implements ImageProcessor {
         const openCVRectangle = new this.openCV.Rect(x, y, width, height);
 
         const ROI = openCVConvertedCurrentImage.getRegion(openCVRectangle).copyTo(openCVConvertedCurrentImage);
-
+        this.openCV.imshowWait('zaa', ROI);
         return this.imageDataAdapter.convertOriginalDataToImageMatrix(ROI)
     }
 
@@ -75,8 +121,11 @@ export default class OpenCVImageProcessor implements ImageProcessor {
             return angle;
         })
 
-        console.log(rectanglesAngles)
-
         return rectanglesAngles
+    }
+
+    getNonZeroPixelsinImage(currentImage: ImageMatrix): number {
+        const openCVImage = this.imageDataAdapter.convertImageMatrixToOriginalData(currentImage);
+        return openCVImage.countNonZero()
     }
 }
