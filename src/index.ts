@@ -1,17 +1,11 @@
-const OpenCVImageProcessorAdapter = require('./utils/OpenCVImageProcessorAdapter');
+import fs from 'fs';
+import PaperSheetProcessor from './data/PaperSheetProcessor';
+import { PaperSheetProcessorService } from './service/data/PaperSheetProcessorService';
 
-const opencv = require('@u4/opencv4nodejs');
+const paperSheetTemplate: PaperSheetTemplate = JSON.parse(fs.readFileSync('./template.json', { encoding: 'utf8' }));
 
-const img = opencv.imread('./assets/img.jpg');
+const PaperSheet = PaperSheetProcessorService(paperSheetTemplate);
 
-const imageProcessor = new OpenCVImageProcessorAdapter(opencv)
-
-const imgMatrix = imageProcessor.convertOriginalDataToImageMatrix(img);
-const originalImage = imageProcessor.convertImageMatrixToOriginalData(imgMatrix)
+console.log(PaperSheet.processCurrentSheet('./assets/img.jpg'))
 
 
-const Quagga = require('@ericblade/quagga2').default;
-
-const QuaggaBarcodeProcessor = require('./data/QuaggaBarcodeProcessor');
-
-const proc = new QuaggaBarcodeProcessor(Quagga);
