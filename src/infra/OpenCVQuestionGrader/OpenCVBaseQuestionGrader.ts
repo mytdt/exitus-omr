@@ -4,28 +4,28 @@ import { QuestionVerdict } from '../../types/QuestionVerdict';
 export default abstract class OpenCVBaseQuestionGrader implements QuestionGrader {
     protected readonly openCV: typeof OpenCV;
     protected readonly imageDataAdapter: ImageDataAdapter;
+    protected readonly imageProcessor: ImageProcessor;
     protected readonly aspectRatioTolerance: number = 0.1;
     protected readonly percentMarkedAreaTolerance: number = 0.9;
     protected readonly questionMarkHeight: number = 30;
     protected readonly questionMarkWidth: number = 30;
 
-    constructor(openCV: typeof OpenCV, imageDataAdapter: ImageDataAdapter) {
+    constructor(openCV: typeof OpenCV, imageDataAdapter: ImageDataAdapter, imageProcessor: ImageProcessor) {
         this.openCV = openCV;
         this.imageDataAdapter = imageDataAdapter;
+        this.imageProcessor = imageProcessor;
     }
 
-    gradeQuestion(imageMatrix: ImageMatrix, correctAnswerIndex: number): GradeQuestionResult {
-        const openCVImage = this.imageDataAdapter.convertImageMatrixToOriginalData(imageMatrix) as OpenCV.Mat;
+    gradeQuestion(currentImage: ImageMatrix, answerSheetRegion: Rectangle, correctAnswerIndex: number): GradeQuestionResult {
+        const answerROI = this.imageProcessor.getRegionOfInterest(currentImage, answerSheetRegion);
 
         /* Image processing for proper handling contour extraction  */
-        const grayscaledImage = openCVImage.bgrToGray();
-        const invertedImage = grayscaledImage.bitwiseNot();
-        const blurredImage = invertedImage.gaussianBlur(new OpenCV.Size(3, 3), 0)
-        const openCVThresholdedImage = blurredImage.threshold(0, 255, OpenCV.THRESH_BINARY | OpenCV.THRESH_OTSU);
+        const grayscaledImage = this.imageProcessor.convertToGrayscale(answerROI);
+        const invertedImage = this.imageProcessor.applyBitwiseNot(grayscaledImage);
+        const blurredImage = this.imageProcessor.applyGaussianBlur(invertedImage);
+        const thresholdedImage = this.imageProcessor.applyThreshold(blurredImage, { thresholdNumber: 0, maximumValue: 255, type: OpenCV.THRESH_BINARY | OpenCV.THRESH_OTSU })
 
-        const thresholdedImage = this.imageDataAdapter.convertOriginalDataToImageMatrix(openCVThresholdedImage);
-
-        const bubbleSheetCountours = this.getQuestionContours(thresholdedImage);
+        const bubbleSheetCountours = this.getValidQuestionContours(thresholdedImage);
         const sortedContours = this.sortQuestionContours(bubbleSheetCountours, true);
 
         const checkIfCorrectAnswerWasMarked = this.getPercentMarkedArea(thresholdedImage, sortedContours[correctAnswerIndex]) >= 0.9;
@@ -56,42 +56,30 @@ export default abstract class OpenCVBaseQuestionGrader implements QuestionGrader
 
     }
 
-    getQuestionContours(thresholdedImage: ImageMatrix) {
-        const openCVThresholdedImage = this.imageDataAdapter.convertImageMatrixToOriginalData(thresholdedImage);
+    getValidQuestionContours(thresholdedAnswerSheet: ImageMatrix) {
+        const contours = this.imageProcessor.getImageContours(thresholdedAnswerSheet, { mode: OpenCV.RETR_EXTERNAL, method: OpenCV.CHAIN_APPROX_SIMPLE });
 
-        const openCVContours = openCVThresholdedImage.findContours(OpenCV.RETR_EXTERNAL, OpenCV.CHAIN_APPROX_SIMPLE)
+        const validContours = contours.filter((currentContour: Contour) => {
+            const { width, height } = this.imageProcessor.getBoundingRectangleOfContour(currentContour);
 
-        const contours = openCVContours.map((currentContours: Contour) => this.imageDataAdapter.convertOriginalDataToContour(currentContours))
+            if (width <= this.questionMarkWidth || height <= this.questionMarkHeight) {
+                return false
+            };
 
-        return contours.filter((currentContour: Contour) => this.checkIfIsValidQuestion(currentContour))
+            return true;
+        })
+
+        return validContours
     }
 
-    checkIfIsValidQuestion(contour: Contour): boolean {
-        const openCVContour = this.imageDataAdapter.convertContourToOriginalData(contour);
+    getPercentMarkedArea(thresholdedAnswerSheet: ImageMatrix, contour: Contour): number {
+        const mask = this.imageProcessor.createMaskFromImage(thresholdedAnswerSheet, 0);
 
-        const { width, height } = openCVContour.boundingRect();
+        const maskWithContours = this.imageProcessor.drawContoursInImage(mask, [contour]);
 
-        if (width <= this.questionMarkWidth || height <= this.questionMarkHeight) {
-            return false
-        };
+        const maskedImage = this.imageProcessor.applyBitwiseAnd(thresholdedAnswerSheet, maskWithContours);
 
-        return true;
-    }
-
-    getPercentMarkedArea(thresholdedImage: ImageMatrix, contour: Contour): number {
-        const openCVThresholdedImage = this.imageDataAdapter.convertImageMatrixToOriginalData(thresholdedImage);
-        const openCVContour = this.imageDataAdapter.convertContourToOriginalData(contour);
-
-        const { rows, cols, type } = openCVThresholdedImage;
-
-        const mask = new this.openCV.Mat(rows, cols, type, 0);
-        const contourColorVector = new this.openCV.Vec3(255, 255, 255)
-
-        mask.drawContours([openCVContour.getPoints()], -1, new OpenCV.Vec3(255, 255, 255), { thickness: -1 });
-
-        const openCVMaskedImage = openCVThresholdedImage.bitwiseAnd(mask);
-
-        const totalOfMarkedPixels = openCVMaskedImage.countNonZero();
+        const totalOfMarkedPixels = this.imageProcessor.getNonZeroPixelsinImage(maskedImage);
 
         const markedTotalArea = this.getQuestionTotalAreaFromContour(contour);
 
@@ -99,25 +87,19 @@ export default abstract class OpenCVBaseQuestionGrader implements QuestionGrader
     };
 
     getQuestionTotalAreaFromContour(contour: Contour): number {
-        const { openCVContour } = this.imageDataAdapter.convertContourToOriginalData(contour);
-
-        const { width, height } = openCVContour.boundingRect();
-
+        const { width, height } = this.imageProcessor.getBoundingRectangleOfContour(contour)
         return width * height;
     };
 
     sortQuestionContours(contours: Contour[], ascending: boolean): Contour[] {
         return contours.sort((contourA, contourB) => {
-            const openCVContourA = this.imageDataAdapter.convertContourToOriginalData(contourA);
-            const openCVContourB = this.imageDataAdapter.convertContourToOriginalData(contourB);
+            const { x: xA } = this.imageProcessor.getBoundingRectangleOfContour(contourA)
+            const { x: xB } = this.imageProcessor.getBoundingRectangleOfContour(contourB)
 
-            const { x: xA } = openCVContourA.boundingRect();
-            const { x: xB } = openCVContourB.boundingRect();
             if (ascending) {
                 return xA - xB;
             }
             return xB - xA;
         })
     }
-
 }

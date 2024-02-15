@@ -2,8 +2,8 @@ import * as OpenCV from '@u4/opencv4nodejs';
 import OpenCVBaseQuestionGrader from './OpenCVBaseQuestionGrader';
 
 export default class OpenCVBubbleSheetQuestionGrader extends OpenCVBaseQuestionGrader {
-    constructor(openCV: typeof OpenCV, imageDataAdapter: ImageDataAdapter) {
-        super(openCV, imageDataAdapter)
+    constructor(openCV: typeof OpenCV, imageDataAdapter: ImageDataAdapter, imageProcessor: ImageProcessor) {
+        super(openCV, imageDataAdapter, imageProcessor)
     }
 
     checkIfIsValidQuestion(contour: Contour): boolean {
