@@ -24,7 +24,7 @@ export default class PaperSheetCornerProcessor implements PaperSheetCornerProces
 
         const cornerIndicatorsROI = this.imageProcessor.getRegionOfInterest(thresholdedImage, cornerIndicatorsRegion);
 
-        return this.imageProcessor.getImageContours(cornerIndicatorsROI);
+        return this.imageProcessor.getImageContours(cornerIndicatorsROI, { mode: OpenCV.RETR_TREE, method: OpenCV.CHAIN_APPROX_SIMPLE });
     }
 
     rotatePaperSheetAfterCornerIndicators(paperSheetImagePath: string, cornerIndicatorsContours: Contour[]): ImageMatrix {
