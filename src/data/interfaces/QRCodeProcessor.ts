@@ -1,3 +1,3 @@
 declare interface QRCodeProcessor {
-    decode(qrCodeImg: ImageMatrix): string;
+    decode(paperSheetFilePath: ImageMatrix, qrCodeRegion: Rectangle): string;
 }
