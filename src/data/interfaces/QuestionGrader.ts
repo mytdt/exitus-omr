@@ -1,7 +1,8 @@
 declare interface QuestionGrader {
-    gradeQuestion(currentImage: ImageMatrix, answerSheetRegion: Rectangle, correctAnswerIndex: number): GradeQuestionResult;
+    gradeQuestionColumn(currentImage: ImageMatrix, questionColumnRegion: Rectangle, numberOfAnswersPerQuestion: number, numberOfRows: number)
+    gradeSingleQuestion(currentThresholdedImage: ImageMatrix, currentQuestionContours: Contour[], numberOfAnswersPerQuestion: number, currentQuestionIndex): GradeQuestionResult
     getValidQuestionContours(thresholdedAnswerSheet: ImageMatrix): Contour[];
     getPercentMarkedArea(thresholdedImage: ImageMatrix, contour: Contour): number;
     getQuestionTotalAreaFromContour(contour: Contour): number;
-    sortQuestionContours(contours: Contour[], ascending: boolean): Contour[];
-}
+    sortQuestionContours(contours: Contour[], type: 'left-to-right' | 'right-to-left' | 'bottom-to-top' | 'top-to-bottom'): Contour[];
+} 

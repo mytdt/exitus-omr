@@ -9,7 +9,7 @@ declare interface AnswerSheetTemplate {
     type: 'bubble' | 'rectangle',
     numberOfAnswersPerQuestion: number;
     columns: {
-        firstRowRegion: Rectangle;
+        region: Rectangle;
         numberOfRows: number;
     }[]
 }
