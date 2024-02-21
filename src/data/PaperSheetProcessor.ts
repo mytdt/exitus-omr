@@ -27,16 +27,21 @@ export default class PaperSheetProcessor {
         /* TODO: Validate Errors and Develop Exceptions Flow */
         const { columns, numberOfAnswersPerQuestion, type } = answerSheet;
 
-        /* TODO: Implement full column ROI logic in order to avoid detecting errors */
-        columns.forEach(({ firstRowRegion, numberOfRows }, index) => {
-            for (let i = 0; i < numberOfRows; i++) {
+        const answeredQuestionsByColumn = columns.map(({ region, numberOfRows }) => {
+            return this.questionGrader.gradeQuestionColumn(rotatedImage, region, numberOfAnswersPerQuestion, numberOfRows);
+        });
 
-                const currentRowRegion: Rectangle = {
-                    ...firstRowRegion,
-                    y: firstRowRegion.y + firstRowRegion.height * i
+        const answeredQuestions = answeredQuestionsByColumn.reduce((previousProcessedAnswerColumn, currentAnswerColumn, index) => {
+            const currentProcessedAnswerColumn = currentAnswerColumn.map(({ questionIndex, ...rest }: GradeQuestionResult) => {
+                const lastQuestionIndex = previousProcessedAnswerColumn.length;
+                return {
+                    questionIndex: questionIndex + lastQuestionIndex,
+                    ...rest
                 }
-                this.questionGrader.gradeQuestion(rotatedImage, currentRowRegion, 0);
-            }
-        })
+            })
+
+
+            return [...previousProcessedAnswerColumn, ...currentProcessedAnswerColumn]
+        }, [])
     }
 }
